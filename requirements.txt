@@ -1,0 +1,16 @@
+# --- AI ---
+google-genai        # Gemini SDK: sends text/images to Vertex AI and returns summaries
+
+# --- Config ---
+python-dotenv       # loads settings (project ID, credentials path) from the .env file
+
+# --- File reading ---
+pypdf               # extracts text from PDF files
+
+# --- Streamlit web app ---
+streamlit           # builds the web UI (app.py)
+
+# --- API ---
+fastapi             # builds the API endpoints (api.py)
+uvicorn             # server that runs the FastAPI app
+python-multipart    # lets FastAPI accept file/image uploads

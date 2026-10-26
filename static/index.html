@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pinch</title>
+    <link rel="icon" type="image/png" href="/static/pinch-dumpling-lower-left.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              display: ['"Bricolage Grotesque"', "system-ui", "sans-serif"],
+              serif: ['"Source Serif 4"', "Georgia", "serif"],
+            },
+            colors: {
+              paper: "var(--paper)",
+              surface: "var(--surface)",
+              ink: "var(--ink)",
+              muted: "var(--muted)",
+              line: "var(--line)",
+              accent: "var(--accent)",
+              "accent-ink": "var(--accent-ink)",
+              mark: "var(--mark)",
+              danger: "var(--danger)",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      :root {
+        --paper: #eceef8;
+        --surface: #ffffff;
+        --ink: #161b3d;
+        --muted: #646a8e;
+        --line: #d3d8ec;
+        --accent: #3b4bf0;
+        --accent-ink: #ffffff;
+        --mark: #ffe47a;
+        --danger: #c2263b;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --paper: #0e1125;
+          --surface: #171b38;
+          --ink: #e8eafb;
+          --muted: #97a0c9;
+          --line: #2a3060;
+          --accent: #8b97ff;
+          --accent-ink: #0e1125;
+          --mark: #5b4b0f;
+          --danger: #ff8a98;
+        }
+      }
+      body {
+        background: var(--paper);
+        color: var(--ink);
+      }
+      ::selection {
+        background: var(--mark);
+        color: var(--ink);
+      }
+      #result li::marker {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen font-display antialiased">
+    <div class="mx-auto max-w-[1400px] px-4 py-10 sm:px-8 sm:py-16 lg:flex lg:h-screen lg:flex-col lg:px-12 lg:py-8">
+      <header class="mb-10 max-w-2xl sm:mb-14 lg:mb-6 lg:flex lg:max-w-none lg:items-end lg:justify-between lg:gap-8">
+        <div>
+          <p class="mb-3 text-xl font-bold tracking-tight text-accent lg:mb-2">Pinch</p>
+          <h1 class="text-5xl font-bold leading-[0.95] tracking-tight sm:text-7xl lg:text-5xl lg:leading-none">
+            Say it<br class="lg:hidden" /> shorter.
+          </h1>
+        </div>
+        <p class="mt-5 text-base text-muted sm:text-lg lg:mt-0 lg:max-w-md lg:text-base">
+          Paste an article or drop in a screenshot. Get the point in the
+          style and language you choose.
+        </p>
+      </header>
+
+      <main class="grid gap-5 lg:min-h-0 lg:flex-1 lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)]">
+        <!-- Source -->
+        <section
+          class="flex flex-col gap-5 rounded-3xl bg-surface p-5 shadow-[0_1px_0_var(--line),0_12px_32px_-18px_rgba(22,27,61,0.35)] sm:p-7 lg:min-h-0 lg:overflow-y-auto"
+          aria-label="Source"
+        >
+          <div>
+            <span id="styleLabel" class="mb-2 block text-sm font-medium">Style</span>
+            <div
+              id="styleBox"
+              role="radiogroup"
+              aria-labelledby="styleLabel"
+              class="grid grid-cols-2 gap-1 rounded-xl border border-line bg-paper p-1 sm:grid-cols-4"
+            ></div>
+          </div>
+
+          <div class="relative">
+            <span id="langLabel" class="mb-2 block text-sm font-medium">Language</span>
+            <button
+              id="langBtn"
+              type="button"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-labelledby="langLabel langValue"
+              class="flex w-full items-center justify-between rounded-xl border border-line bg-surface px-3.5 py-2.5 text-left text-sm outline-none transition hover:border-accent focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              <span id="langValue">English</span>
+              <svg class="h-4 w-4 text-muted" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 8l5 5 5-5" />
+              </svg>
+            </button>
+            <ul
+              id="langList"
+              role="listbox"
+              aria-labelledby="langLabel"
+              class="absolute z-10 mt-1.5 hidden w-full grid-cols-2 gap-0.5 rounded-xl border border-line bg-surface p-1 shadow-[0_16px_40px_-12px_rgba(22,27,61,0.4)]"
+            ></ul>
+            <select id="language" class="sr-only" tabindex="-1" aria-hidden="true"></select>
+          </div>
+
+          <div class="flex flex-col lg:min-h-[7rem] lg:flex-1">
+            <label for="text" class="mb-2 block text-sm font-medium">Text</label>
+            <textarea
+              id="text"
+              rows="9"
+              placeholder="Paste what you want shortened"
+              class="w-full resize-y rounded-xl lg:min-h-0 lg:flex-1 lg:resize-none border border-line bg-surface px-3.5 py-3 text-[15px] leading-relaxed outline-none transition placeholder:text-muted focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent"
+            ></textarea>
+          </div>
+
+          <div>
+            <span class="mb-2 block text-sm font-medium">Or use an image</span>
+            <input type="file" id="image" accept="image/*" class="sr-only" />
+            <label
+              id="drop"
+              for="image"
+              class="flex cursor-pointer items-center gap-4 rounded-xl border border-dashed border-line px-4 py-4 transition hover:border-accent focus-within:ring-2 focus-within:ring-accent"
+            >
+              <img
+                id="thumb"
+                alt=""
+                class="hidden h-14 w-14 shrink-0 rounded-lg object-cover"
+              />
+              <span class="min-w-0 flex-1 text-sm">
+                <span id="dropTitle" class="block font-medium">Choose or drop an image</span>
+                <span id="dropHint" class="block truncate text-muted">PNG or JPG, up to 10 MB</span>
+              </span>
+              <button
+                type="button"
+                id="clearImage"
+                class="hidden rounded-lg px-2.5 py-1.5 text-sm text-muted transition hover:text-ink focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                Remove
+              </button>
+            </label>
+          </div>
+
+          <button
+            id="run"
+            type="button"
+            class="w-full rounded-xl bg-accent px-5 py-3.5 text-base font-medium text-accent-ink transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Summarize
+          </button>
+        </section>
+
+        <!-- Summary -->
+        <section
+          class="min-h-[22rem] rounded-3xl border border-line p-5 sm:p-8 lg:min-h-0 lg:overflow-y-auto"
+          aria-label="Summary"
+        >
+          <div id="head" class="mb-5 hidden items-center justify-between gap-3">
+            <span
+              id="stat"
+              class="hidden rounded-md bg-mark px-2 py-1 text-sm font-medium"
+            ></span>
+            <button
+              id="copy"
+              type="button"
+              class="ml-auto rounded-lg px-2.5 py-1.5 text-sm text-muted transition hover:text-ink focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              Copy
+            </button>
+          </div>
+
+          <p id="empty" class="max-w-xs text-lg leading-snug text-muted">
+            Your summary shows up here. Add some text and press Summarize.
+          </p>
+
+          <div id="loading" class="hidden space-y-3 motion-safe:animate-pulse" aria-hidden="true">
+            <div class="h-3 w-full rounded bg-line"></div>
+            <div class="h-3 w-11/12 rounded bg-line"></div>
+            <div class="h-3 w-full rounded bg-line"></div>
+            <div class="h-3 w-3/5 rounded bg-line"></div>
+          </div>
+
+          <div
+            id="result"
+            aria-live="polite"
+            class="hidden max-w-prose space-y-3 font-serif text-[1.075rem] leading-[1.7]"
+          ></div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const NO_SPACE_LANGS = ["Khmer", "Thai", "Chinese", "Japanese"];
+      let currentStyle = "";
+      let busy = false;
+
+      const words = (s) => (s.trim().match(/\S+/g) || []).length;
+
+      async function load() {
+        const o = await (await fetch("/options")).json();
+        buildLang(o.languages);
+        styleBox.innerHTML = "";
+        o.styles.forEach((s) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.setAttribute("role", "radio");
+          b.dataset.value = s;
+          b.textContent = s;
+          b.className =
+            "rounded-lg px-2 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent";
+          b.onclick = () => pick(s);
+          styleBox.append(b);
+        });
+        pick(o.styles[0]);
+      }
+
+      // Language picker: a custom listbox over a hidden <select> that holds the value.
+      function buildLang(list) {
+        language.innerHTML = list.map((l) => `<option>${l}</option>`).join("");
+        langList.replaceChildren();
+        list.forEach((l) => {
+          const li = document.createElement("li");
+          li.setAttribute("role", "option");
+          li.tabIndex = -1;
+          li.dataset.value = l;
+          li.textContent = l;
+          li.className =
+            "cursor-pointer rounded-lg px-3 py-2 text-sm outline-none transition hover:bg-paper focus-visible:bg-paper";
+          li.onclick = () => {
+            setLang(l);
+            closeLang(true);
+          };
+          langList.append(li);
+        });
+        setLang(list[0]);
+      }
+
+      function setLang(v) {
+        language.value = v;
+        langValue.textContent = v;
+        for (const li of langList.children) {
+          const on = li.dataset.value === v;
+          li.setAttribute("aria-selected", on);
+          li.classList.toggle("font-medium", on);
+          li.classList.toggle("text-accent", on);
+        }
+      }
+
+      function openLang() {
+        langList.classList.remove("hidden");
+        langList.classList.add("grid");
+        langBtn.setAttribute("aria-expanded", "true");
+        [...langList.children].find((li) => li.dataset.value === language.value).focus();
+      }
+
+      function closeLang(refocus) {
+        langList.classList.add("hidden");
+        langList.classList.remove("grid");
+        langBtn.setAttribute("aria-expanded", "false");
+        if (refocus) langBtn.focus();
+      }
+
+      langBtn.addEventListener("click", () =>
+        langList.classList.contains("hidden") ? openLang() : closeLang(),
+      );
+      langBtn.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          openLang();
+        }
+      });
+      langList.addEventListener("keydown", (e) => {
+        const items = [...langList.children];
+        const i = items.indexOf(document.activeElement);
+        const move = { ArrowDown: 2, ArrowUp: -2, ArrowRight: 1, ArrowLeft: -1 }[e.key];
+        if (move) {
+          e.preventDefault();
+          items[Math.max(0, Math.min(items.length - 1, i + move))].focus();
+        } else if ((e.key === "Enter" || e.key === " ") && i >= 0) {
+          e.preventDefault();
+          setLang(items[i].dataset.value);
+          closeLang(true);
+        } else if (e.key === "Escape") {
+          closeLang(true);
+        } else if (e.key === "Tab") {
+          closeLang();
+        }
+      });
+      document.addEventListener("click", (e) => {
+        if (!langBtn.parentElement.contains(e.target)) closeLang();
+      });
+
+      function pick(s) {
+        currentStyle = s;
+        for (const b of styleBox.children) {
+          const on = b.dataset.value === s;
+          b.setAttribute("aria-checked", on);
+          b.classList.toggle("bg-accent", on);
+          b.classList.toggle("text-accent-ink", on);
+          b.classList.toggle("text-muted", !on);
+          b.classList.toggle("hover:text-ink", !on);
+        }
+      }
+
+      function setState(state) {
+        empty.classList.toggle("hidden", state !== "empty");
+        loading.classList.toggle("hidden", state !== "loading");
+        result.classList.toggle("hidden", state !== "result" && state !== "error");
+        head.classList.toggle("hidden", state !== "result");
+        head.classList.toggle("flex", state === "result");
+      }
+
+      // Renders plain lines as paragraphs and "* " / "- " lines as a list.
+      function render(textValue) {
+        result.replaceChildren();
+        let list = null;
+        for (const raw of textValue.split("\n")) {
+          const line = raw.trim();
+          if (!line) {
+            list = null;
+            continue;
+          }
+          const m = line.match(/^[*\-•]\s+(.*)$/);
+          const el = document.createElement(m ? "li" : "p");
+          inline(el, m ? m[1] : line);
+          if (m) {
+            if (!list) {
+              list = document.createElement("ul");
+              list.className = "list-disc space-y-2 pl-5";
+              result.append(list);
+            }
+            list.append(el);
+          } else {
+            list = null;
+            result.append(el);
+          }
+        }
+      }
+
+      function inline(el, s) {
+        s.split(/\*\*(.+?)\*\*/g).forEach((part, i) => {
+          if (i % 2) {
+            const b = document.createElement("strong");
+            b.className = "font-semibold";
+            b.textContent = part;
+            el.append(b);
+          } else {
+            el.append(part);
+          }
+        });
+      }
+
+      function showError(msg) {
+        result.className =
+          "max-w-prose font-display text-base leading-relaxed text-danger";
+        result.textContent = msg;
+        setState("error");
+      }
+
+      function showSummary(summary, sourceWords) {
+        result.className =
+          "max-w-prose space-y-3 font-serif text-[1.075rem] leading-[1.7]";
+        render(summary);
+        const after = words(summary);
+        const ok = sourceWords > 0 && !NO_SPACE_LANGS.includes(language.value);
+        stat.classList.toggle("hidden", !ok);
+        if (ok) {
+          stat.textContent = `${sourceWords.toLocaleString()} → ${after.toLocaleString()} words`;
+        }
+        setState("result");
+      }
+
+      async function run() {
+        if (busy) return;
+        const useImage = !!image.files[0];
+        if (!useImage && !text.value.trim()) {
+          showError("Paste some text or choose an image first.");
+          return;
+        }
+        busy = true;
+        run_.disabled = true;
+        run_.textContent = "Summarizing...";
+        setState("loading");
+        try {
+          let res;
+          if (useImage) {
+            const fd = new FormData();
+            fd.append("file", image.files[0]);
+            fd.append("style", currentStyle);
+            fd.append("language", language.value);
+            res = await fetch("/summarize-image", { method: "POST", body: fd });
+          } else {
+            res = await fetch("/summarize", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                text: text.value,
+                style: currentStyle,
+                language: language.value,
+              }),
+            });
+          }
+          let data = {};
+          try {
+            data = await res.json();
+          } catch (e) {}
+          if (res.ok && data.summary) {
+            showSummary(data.summary, useImage ? 0 : words(text.value));
+          } else {
+            const d = data.detail;
+            showError(typeof d === "string" ? d : `Something went wrong (HTTP ${res.status}).`);
+          }
+        } catch (e) {
+          showError("Can't reach the server. Check that it's running.");
+        } finally {
+          busy = false;
+          run_.disabled = false;
+          run_.textContent = "Summarize";
+        }
+      }
+
+      // Image picker
+      function syncImage() {
+        const f = image.files[0];
+        thumb.classList.toggle("hidden", !f);
+        clearImage.classList.toggle("hidden", !f);
+        if (f) {
+          thumb.src = URL.createObjectURL(f);
+          dropTitle.textContent = f.name;
+          dropHint.textContent = text.value.trim()
+            ? "The image is used. Pasted text is ignored."
+            : `${(f.size / 1024).toFixed(0)} KB`;
+        } else {
+          thumb.removeAttribute("src");
+          dropTitle.textContent = "Choose or drop an image";
+          dropHint.textContent = "PNG or JPG, up to 10 MB";
+        }
+      }
+      image.addEventListener("change", syncImage);
+      text.addEventListener("input", () => image.files[0] && syncImage());
+      clearImage.addEventListener("click", (e) => {
+        e.preventDefault();
+        image.value = "";
+        syncImage();
+      });
+      ["dragover", "dragenter"].forEach((ev) =>
+        drop.addEventListener(ev, (e) => {
+          e.preventDefault();
+          drop.classList.add("border-accent");
+        }),
+      );
+      ["dragleave", "drop"].forEach((ev) =>
+        drop.addEventListener(ev, () => drop.classList.remove("border-accent")),
+      );
+      drop.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const f = e.dataTransfer.files[0];
+        if (f && f.type.startsWith("image/")) {
+          image.files = e.dataTransfer.files;
+          syncImage();
+        }
+      });
+
+      copy.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(result.innerText);
+          copy.textContent = "Copied";
+          setTimeout(() => (copy.textContent = "Copy"), 1500);
+        } catch (e) {}
+      });
+
+      const run_ = document.getElementById("run");
+      run_.addEventListener("click", run);
+      load();
+    </script>
+  </body>
+</html>
